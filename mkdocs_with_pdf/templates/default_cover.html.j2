@@ -1,7 +1,7 @@
 <article id="doc-cover">
     {% if cover_logo is defined %}
         <div class="wrapper upper">
-            <div class="logo" style="background-image: url(data:image/jpeg;base64,{{ cover_logo | to_inline_b64 }});"></div>
+            <div class="logo" style="background-image: url({{ cover_logo | to_url }});"></div>
         </div>
     {% else %}
         <div class="wrapper"></div>
