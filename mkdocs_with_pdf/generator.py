@@ -144,7 +144,14 @@ class Generator(object):
         html_string = self._options.hook.pre_pdf_render(html_string)
 
         if self._options.debug_html:
-            print(f'{html_string}')
+            if self._options.debug_html_path:
+                output_abs_path = os.path.abspath(self._options.debug_html_path)
+                self.logger.info(f'Output a debug HTML to "{output_abs_path}".')
+                text_data = f'{html_string}'.encode('utf-8')
+                with open(output_abs_path, 'wb') as f:
+                    f.write(text_data)
+            else:
+                print(f'{html_string}')
 
         self.logger.info("Rendering for PDF.")
         html = HTML(string=html_string)
@@ -378,7 +385,7 @@ class Generator(object):
                     body.append(script)
                 if len(self._mixed_script) > 0:
                     tag = soup.new_tag('script')
-                    tag.text = self._mixed_script
+                    tag.string = self._mixed_script
                     body.append(tag)
                 for src in scripts:
                     body.append(soup.new_tag('script', src=f'file://{src}'))

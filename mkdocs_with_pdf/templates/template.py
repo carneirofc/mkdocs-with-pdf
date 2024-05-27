@@ -6,6 +6,7 @@ from mkdocs.config.base import Config
 
 from .filters.datetime import strftime, strptime
 from .filters.url import URLFilter
+from .filters.base64 import InlineB64Filter
 
 try:
     from .filters.barcode import Barcode
@@ -58,6 +59,7 @@ class Template(object):
             env.filters['strftime'] = strftime
 
             env.filters['to_url'] = URLFilter(self._options, self._config)
+            env.filters['to_inline_b64'] = InlineB64Filter(self._options, self._config)
 
             if Barcode:
                 env.filters['barcode'] = Barcode(self._options, self._config)

@@ -14,6 +14,7 @@ class Options(object):
 
         ('verbose', config_options.Type(bool, default=False)),
         ('debug_html', config_options.Type(bool, default=False)),
+        ('debug_html_path', config_options.Type(str, default=None)),
         ('show_anchors', config_options.Type(bool, default=False)),
 
         ('output_path', config_options.Type(str, default="pdf/document.pdf")),
@@ -50,6 +51,7 @@ class Options(object):
 
         self.verbose = local_config['verbose']
         self.debug_html = local_config['debug_html']
+        self.debug_html_path = local_config['debug_html_path']
         self.show_anchors = local_config['show_anchors']
 
         self.output_path = local_config.get('output_path', None)

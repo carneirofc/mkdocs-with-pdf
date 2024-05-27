@@ -3,15 +3,15 @@ import io
 from setuptools import find_packages, setup
 
 setup(
-    name='mkdocs-with-pdf',
-    version='0.9.3',
-    description='Generate a single PDF file from MkDocs repository',  # noqa E501
+    name='mkdocs-with-pdf-nightly',
+    version='1.0.1',
+    description='Generate a single PDF file from MkDocs repository nightly, a fork of the original project mkdocs-with-pdf',  # noqa E501
     long_description=io.open('README.md', encoding='utf8').read(),
     long_description_content_type='text/markdown',
-    keywords='mkdocs pdf weasyprint',
-    url='https://github.com/orzih/mkdocs-with-pdf',
+    keywords='mkdocs pdf weasyprint mkdocs-with-pdf nightly',
+    url='https://github.com/carneirofc/mkdocs-with-pdf',
     author='orzih',
-    author_email='orzih@mail.com',
+    author_email='claudiofcarneiro@hotmail.com',
     license='MIT',
     python_requires='>=3.6',
     install_requires=[
@@ -27,10 +27,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9'
+        'Programming Language :: Python :: 3.12'
     ],
     packages=find_packages(),
     include_package_data=True,
