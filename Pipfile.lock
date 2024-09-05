@@ -496,14 +496,6 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==4.62.2"
         },
-        "weasyprint": {
-            "hashes": [
-                "sha256:21a1a9f11650ed14241817bf333a0ae0a42f6ae38cd7c2654845cb17352b7434",
-                "sha256:36b897d219e1944a1a0c97193a121fc175db326c660c50d937e874a995d9c716"
-            ],
-            "index": "pypi",
-            "version": "==52.2"
-        },
         "webencodings": {
             "hashes": [
                 "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78",
@@ -1124,14 +1116,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==2.1.5"
-        },
-        "weasyprint": {
-            "hashes": [
-                "sha256:21a1a9f11650ed14241817bf333a0ae0a42f6ae38cd7c2654845cb17352b7434",
-                "sha256:36b897d219e1944a1a0c97193a121fc175db326c660c50d937e874a995d9c716"
-            ],
-            "index": "pypi",
-            "version": "==52.2"
         },
         "webencodings": {
             "hashes": [

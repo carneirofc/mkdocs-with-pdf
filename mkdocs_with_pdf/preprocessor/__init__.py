@@ -1,10 +1,10 @@
 import os
 
 from bs4 import PageElement
-from weasyprint import urls
 
 from .links.transform import transform_href, transform_id
 from .links.util import get_body_id, rel_pdf_href, replace_asset_hrefs
+from ..utils import urls
 
 
 def get_combined(

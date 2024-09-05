@@ -20,7 +20,6 @@ qrcode = "*"
 mkdocs = ">=1.1"
 beautifulsoup4 = "*"
 libsass = "*"
-weasyprint = "*"
 
 [requires]
 #python_version = "3.6"

@@ -3,6 +3,10 @@ import os
 from timeit import default_timer as timer
 
 from mkdocs.plugins import BasePlugin
+from mkdocs.structure.nav import Navigation
+from mkdocs.structure.pages import Page
+from mkdocs.structure.files import Files
+from mkdocs.config.defaults import MkDocsConfig
 
 from .drivers.event_hook import EventHookHandler
 from .generator import Generator
@@ -43,7 +47,6 @@ class _CaptureWarnings:
 
 
 class WithPdfPlugin(BasePlugin):
-
     config_scheme = Options.config_scheme
 
     def __init__(self):
@@ -64,7 +67,6 @@ class WithPdfPlugin(BasePlugin):
         return server
 
     def on_config(self, config):
-
         if "enabled_if_env" in self.config:
             env_name = self.config["enabled_if_env"]
             if env_name:
@@ -81,14 +83,8 @@ class WithPdfPlugin(BasePlugin):
             self.enabled = True
         self._options = Options(self.config, config, self._logger)
 
-        from weasyprint.logger import LOGGER
-
-        if self._options.verbose:
-            LOGGER.setLevel(logging.DEBUG)
-            self._logger.setLevel(logging.DEBUG)
-        else:
-            LOGGER.setLevel(logging.ERROR)
-
+        LOGGER = logging.getLogger(__name__)
+        LOGGER.setLevel(logging.INFO)
         if self._options.strict:
             self._error_counter = _ErrorAndWarningCountFilter()
             LOGGER.addFilter(self._error_counter)
@@ -96,13 +92,9 @@ class WithPdfPlugin(BasePlugin):
 
         self.generator = Generator(options=self._options)
 
-        """
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-        LOGGER.addHandler(handler)
-        """
-
-    def on_nav(self, nav, config, files):
+    def on_nav(
+        self, nav: Navigation, /, *, config: MkDocsConfig, files: Files
+    ) -> Navigation | None:
         if self.enabled:
             _ = (
                 _CaptureWarnings(self._error_counter)
@@ -112,16 +104,21 @@ class WithPdfPlugin(BasePlugin):
             self.generator.on_nav(nav)
         return nav
 
-    def on_post_page(self, output_content, page, config):
+    def on_post_page(
+        self, output: str, /, *, page: Page, config: MkDocsConfig
+    ) -> str | None:
         if not self.enabled:
-            return output_content
+            return output
+        self._logger.info(
+            f"#{self._num_pages + 1} Converting {page.file.src_path} to PDF"
+        )
 
         _ = _CaptureWarnings(self._error_counter) if (self._options.strict) else None
 
         self._num_pages += 1
         start = timer()
         pdf_path = self._get_path_to_pdf_from(page.file.dest_path)
-        modified = self.generator.on_post_page(output_content, page, pdf_path)
+        modified = self.generator.on_post_page(output, page, pdf_path)
         end = timer()
         self._total_time += end - start
         return modified

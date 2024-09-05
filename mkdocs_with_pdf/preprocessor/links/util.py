@@ -1,6 +1,6 @@
 import os
 
-from weasyprint import urls
+from mkdocs_with_pdf.utils import urls
 from bs4 import PageElement
 
 
@@ -21,7 +21,7 @@ def is_doc(href: str) -> bool:
 
     absurl = urls.url_is_absolute(href)
     abspath = os.path.isabs(href)
-    htmlfile = ext.startswith('.html')
+    htmlfile = ext.startswith(".html")
     if absurl or abspath or not htmlfile:
         return False
 
@@ -32,11 +32,11 @@ def rel_pdf_href(href: str):
     head, tail = os.path.split(href)
     filename, _ = os.path.splitext(tail)
 
-    internal = href.startswith('#')
+    internal = href.startswith("#")
     if not is_doc(href) or internal:
         return href
 
-    return urls.iri_to_uri(os.path.join(head, filename + '.pdf'))
+    return urls.iri_to_uri(os.path.join(head, filename + ".pdf"))
 
 
 def abs_asset_href(href: str, base_url: str):
@@ -49,15 +49,15 @@ def abs_asset_href(href: str, base_url: str):
 def replace_asset_hrefs(soup: PageElement, base_url: str) -> PageElement:
     """makes all relative asset links absolute"""
 
-    for link in soup.find_all('link', href=True):
-        link['href'] = abs_asset_href(link['href'], base_url)
+    for link in soup.find_all("link", href=True):
+        link["href"] = abs_asset_href(link["href"], base_url)
 
     for asset in soup.find_all(src=True):
-        asset['src'] = abs_asset_href(asset['src'], base_url)
+        asset["src"] = abs_asset_href(asset["src"], base_url)
 
     return soup
 
 
 def get_body_id(url: str):
     section, _ = os.path.splitext(url)
-    return '{}:'.format(section)
+    return "{}:".format(section)

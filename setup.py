@@ -8,7 +8,7 @@ setup(
     description='Generate a single PDF file from MkDocs repository nightly, a fork of the original project mkdocs-with-pdf',  # noqa E501
     long_description=io.open('README.md', encoding='utf8').read(),
     long_description_content_type='text/markdown',
-    keywords='mkdocs pdf weasyprint mkdocs-with-pdf nightly',
+    keywords='mkdocs pdf chrome headless mkdocs-with-pdf nightly',
     url='https://github.com/carneirofc/mkdocs-with-pdf',
     author='orzih',
     author_email='claudiofcarneiro@hotmail.com',
@@ -16,7 +16,6 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'mkdocs>=1.1',
-        'weasyprint>=0.44',
         'beautifulsoup4>=4.6.3',
         'libsass>=0.15'
     ],

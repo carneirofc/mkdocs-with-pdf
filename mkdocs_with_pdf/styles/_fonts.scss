@@ -1,16 +1,16 @@
 @media print {
   html {
     font-size: 95%;
-    font-family: 'Kelmscott Roman NF', 'Noto Serif JP', serif;
+    font-family: 'Trebuchet MS', 'Liberation Sans', 'DejaVu Sans', sans-serif;
   }
 
   body {
-    font-size: 10.5pt;
-    font-family: 'Classico URW T OT', 'Noto Serif JP', serif;
+    font-size: 12pt;
+    font-family: 'Trebuchet MS', 'Liberation Sans', 'DejaVu Sans', sans-serif;
   }
 
   article {
-    font-size: 0.8rem;
+    // font-size: 11pt;
     line-height: 1.6;
   }
 
@@ -21,7 +21,8 @@
   h5,
   h6,
   label {
-    font-family: 'Gentium Book Basic', 'Helvetica Neue', Helvetica, Arial, 'Noto Sans JP', 'Roboto', sans-serif;
+    font-family: 'Trebuchet MS', 'Liberation Sans', 'DejaVu Sans', sans-serif;
+    // font-family: 'Gentium Book Basic', 'Helvetica Neue', Helvetica, Arial, 'Noto Sans JP', 'Roboto', sans-serif;
   }
 
   pre,
@@ -30,8 +31,8 @@
   samp,
   kbd,
   tt {
-    font-family: 'Noto Sans Mono CJK JP', 'Courier New', monospace, serif;
-    font-size: 0.8em;
+    font-family: 'Noto Sans Mono', 'Courier New', monospace, serif;
+    // font-size: 12pt;
   }
 
   pre code,
@@ -40,5 +41,6 @@
   pre kbd,
   pre tt {
     font-size: 100%;
+    font-family: 'Noto Sans Mono', 'Courier New', monospace, serif;
   }
 }

@@ -46,7 +46,7 @@ class Options(object):
             config_options.Type(str, default='chromium-browser'))
     )
 
-    def __init__(self, local_config, config, logger: logging):
+    def __init__(self, local_config, config, logger: logging.Logger):
         self.strict = True if config['strict'] else False
 
         self.verbose = local_config['verbose']
@@ -132,7 +132,7 @@ class Options(object):
         return self._cover_logo
 
     @property
-    def logger(self) -> logging:
+    def logger(self) -> logging.Logger:
         return self._logger
 
     @property

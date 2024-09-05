@@ -15,13 +15,13 @@ class EventHookHandler(object):
     _module_name = 'pdf_event_hook'
 
     @classmethod
-    def on_serve(cls, server, builder, logger: logging):
+    def on_serve(cls, server, builder, logger: logging.Logger):
         path = f'./{cls._module_name}.py'
         if os.path.isfile(path):
-            logger.warn(f'watch {path}')
+            logger.warning(f'watch {path}')
             server.watch(path, builder)
 
-    def __init__(self, options: object, config: Config, logger: logging):
+    def __init__(self, options: object, config: Config, logger: logging.Logger):
         self._options = options
         self._config = config
         self._logger = logger.getChild("HOOK")
@@ -62,5 +62,5 @@ class EventHookHandler(object):
         if self._module and hasattr(self._module, 'pre_pdf_render'):
             soup = BeautifulSoup(html_string, 'html.parser')
             soup = self._module.pre_pdf_render(soup, self._logger)
-            return str(soup)
-        return html_string
+            return soup
+        return BeautifulSoup(html_string, 'html.parser')

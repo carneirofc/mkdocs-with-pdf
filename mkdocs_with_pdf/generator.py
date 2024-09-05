@@ -1,12 +1,12 @@
 import logging
 import os
 import re
-from typing import Pattern
+from typing import Pattern, List
 from importlib import import_module
 from importlib.util import module_from_spec, spec_from_file_location
 
 from bs4 import BeautifulSoup, PageElement
-from weasyprint import HTML, urls
+from mkdocs.structure.nav import Navigation
 
 from .cover import make_cover
 from .options import Options
@@ -16,11 +16,12 @@ from .themes import generic as generic_theme
 from .toc import make_indexes
 from .utils.emoji_util import fix_twemoji
 from .utils.iframe_util import convert_iframe
-from .utils.image_util import fix_image_alignment
+from .utils.image_util import fix_image_alignment, html_inline_images
 from .utils.layout_util import convert_for_two_columns
 from .utils.section import get_section_path
 from .utils.soup_util import clone_element
 from .utils.tabbed_set_util import wrap_tabbed_set_content
+from .utils import urls
 
 
 class Generator(object):
@@ -29,10 +30,10 @@ class Generator(object):
         self._options = options
 
         self._theme = self._load_theme_handler()
-        self._nav = None
+        self._nav: Navigation | None = None
         self._head = None
 
-        self._scraped_scripts = []
+        self._scraped_scripts: List[PageElement] = []
         self._mixed_script = ''
 
         def to_pattern(s: str) -> Pattern:
@@ -47,7 +48,7 @@ class Generator(object):
         self._options.logger.debug(
             f'Exclude page patterns: {self._exclude_page_patterns}')
 
-    def on_nav(self, nav):
+    def on_nav(self, nav: Navigation):
         """ on_nav """
         self._nav = nav
         if nav:
@@ -55,7 +56,6 @@ class Generator(object):
 
     def on_post_page(self, output_content: str, page, pdf_path: str) -> str:
         """ on_post_page """
-
         def is_excluded(url: str) -> bool:
             for p in self._exclude_page_patterns:
                 if p.match(url):
@@ -122,6 +122,9 @@ class Generator(object):
         add_stylesheet(style_for_print(self._options))
         add_stylesheet(self._theme.get_stylesheet(self._options.debug_html))
 
+        if self._nav is None:
+            raise RuntimeError('Navigation is not set.')
+
         for page in self._nav:
             content = self._get_content(soup, page)
             if content:
@@ -140,28 +143,28 @@ class Generator(object):
                                 self._options.logger)
         self._normalize_link_anchors(soup)
         html_string = self._render_js(soup)
+        if not html_string:
+            raise RuntimeError('Failed to render HTML.')
 
-        html_string = self._options.hook.pre_pdf_render(html_string)
+        soup = self._options.hook.pre_pdf_render(html_string)
+        html_inline_images(soup, self._options.logger)
+        with open(os.path.join(output_path, 'document.html'), 'w') as f:
+            f.write(soup.prettify())
 
-        if self._options.debug_html:
-            if self._options.debug_html_path:
-                output_abs_path = os.path.abspath(self._options.debug_html_path)
-                self.logger.info(f'Output a debug HTML to "{output_abs_path}".')
-                text_data = f'{html_string}'.encode('utf-8')
-                with open(output_abs_path, 'wb') as f:
-                    f.write(text_data)
-            else:
-                print(f'{html_string}')
+        if self._options.debug_html and self._options.debug_html_path:
+            output_abs_path = os.path.abspath(self._options.debug_html_path)
+            self.logger.info(f'Output a debug HTML to "{output_abs_path}".')
+            with open(output_abs_path, 'wb') as f:
+                f.write(soup.prettify().encode('utf-8'))
+
+        if self._options.debug_html and not self._options.debug_html_path:
+            print(soup.prettify())
 
         self.logger.info("Rendering for PDF.")
-        html = HTML(string=html_string)
-        render = html.render()
-
-        abs_pdf_path = os.path.join(config['site_dir'], output_path)
+        abs_pdf_path = os.path.abspath(os.path.join(config['site_dir'], output_path))
         os.makedirs(os.path.dirname(abs_pdf_path), exist_ok=True)
 
-        self.logger.info(f'Output a PDF to "{abs_pdf_path}".')
-        render.write_pdf(abs_pdf_path)
+        self._to_pdf(soup, os.path.abspath(os.path.join(output_path, 'document.pdf')))
 
     # ------------------------
     def _remove_empty_tags(self, soup: PageElement):
@@ -218,7 +221,6 @@ class Generator(object):
         return prep_combined(soup, base_url, page.file.url)
 
     def _get_content(self, soup: PageElement, page):
-
         def shift_heading(elem, page):
             for i in range(7, 0, -1):
                 while True:
@@ -288,7 +290,7 @@ class Generator(object):
     # -------------------------------------------------------------
 
     @property
-    def logger(self) -> logging:
+    def logger(self) -> logging.Logger:
         return self._options.logger
 
     def _load_theme_handler(self):
@@ -369,12 +371,18 @@ class Generator(object):
                     self.logger.info(f'  | {anchor}')
 
     # -------------------------------------------------------------
-
-    def _render_js(self, soup):
+    def _to_pdf(self, soup: BeautifulSoup, pdf_path: str):
         if not self._options.js_renderer:
+            raise RuntimeError('No such `Headless Chrome` program.')
+        self._options.js_renderer.to_pdf(soup.prettify(), pdf_path)
+
+    def _render_js(self, soup: BeautifulSoup) -> str:
+        if not self._options.js_renderer:
+            self.logger.info('Rendering JavaScript using `BeautifulSoup`.')
             fix_twemoji(soup, self._options.logger)
             return str(soup)
 
+        self.logger.info('Rendering JavaScript using `Headless Chrome`.')
         soup = self._options.hook.pre_js_render(soup)
 
         scripts = self._theme.get_script_sources()
@@ -390,7 +398,7 @@ class Generator(object):
                 for src in scripts:
                     body.append(soup.new_tag('script', src=f'file://{src}'))
 
-        return self._options.js_renderer.render(str(soup))
+        return self._options.js_renderer.render(soup.prettify())
 
     def _scrap_scripts(self, soup):
         if not self._options.js_renderer:

@@ -54,7 +54,9 @@ article#doc-cover {
     padding: 0 2rem;
 
     p#copyright {
-      font-size: 80%;
+      font-style: italic;
+      font-size: 11pt;
+      // font-size: 80%;
     }
   }
 }
@@ -106,12 +108,12 @@ article#doc-back_cover {
   }
 
   @bottom-left {
-    font-size: 8pt;
+    font-style: italic;
     content: string(title);
   }
 
   @bottom-right {
-    font-size: 8pt;
+    font-style: italic;
     content: string(copyright);
   }
 }
