@@ -108,7 +108,6 @@ plugins:
         - src: https://streamable.com/e/zmtb00
           img: https://cdn-cf-east.streamable.com/image/zmtb00-screenshot75403.jpg
       two_columns_level: 3
-      render_js: true
       #headless_chrome_path: google-chrome
       output_path: ../document.pdf
       #debug_html: true

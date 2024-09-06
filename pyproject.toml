@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkdocs-with-pdf-browser"
+version = "1.0.1"
+description = "Generate a single PDF file from MkDocs repository, a fork of the original project mkdocs-with-pdf but witout the weasyprint dependency dependency"
+readme = { file = "README.md", content-type = "text/markdown" }
+keywords = ["mkdocs", "backstage", "pdf", "chrome", "mkdocs-with-pdf", "nightly"]
+authors = [
+    { name = "carneirofc", email = "claudiofcarneiro@hotmail.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.12"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12"
+]
+
+dependencies = [
+    "mkdocs>=1.1",
+    "beautifulsoup4>=4.6.3",
+    "libsass>=0.15"
+]
+
+[project.urls]
+homepage = "https://github.com/carneirofc/mkdocs-with-pdf"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+
+[tool.setuptools.package-data]
+"*" = ["*"]
+
+[project.entry-points."mkdocs.plugins"]
+with-pdf = "mkdocs_with_pdf.plugin:WithPdfPlugin"

@@ -28,8 +28,7 @@ class Options(object):
         ('cover_title', config_options.Type(str, default=None)),
         ('cover_subtitle', config_options.Type(str, default=None)),
         ('cover_logo', config_options.Type(str, default=None)),
-        ('custom_template_path',
-            config_options.Type(str, default="templates")),
+        ('custom_template_path', config_options.Type(str, default="templates")),
 
         ('toc_title', config_options.Type(str, default="Table of contents")),
         ('heading_shift', config_options.Type(bool, default=True)),
@@ -40,10 +39,7 @@ class Options(object):
         ('exclude_pages', config_options.Type(list, default=[])),
         ('convert_iframe', config_options.Type(list, default=[])),
         ('two_columns_level', config_options.Type(int, default=0)),
-
-        ('render_js', config_options.Type(bool, default=False)),
-        ('headless_chrome_path',
-            config_options.Type(str, default='chromium-browser'))
+        ('headless_chrome_path', config_options.Type(str, default='chromium-browser'))
     )
 
     def __init__(self, local_config, config, logger: logging.Logger):
@@ -91,10 +87,8 @@ class Options(object):
         self.two_columns_level = local_config['two_columns_level']
 
         # ...etc.
-        self.js_renderer = None
-        if local_config['render_js']:
-            self.js_renderer = HeadlessChromeDriver.setup(
-                local_config['headless_chrome_path'], logger)
+        self.js_renderer = HeadlessChromeDriver.setup(
+            local_config['headless_chrome_path'], logger)
 
         # Theming
         self.theme_name = config['theme'].name

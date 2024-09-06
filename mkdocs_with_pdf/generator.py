@@ -5,8 +5,9 @@ from typing import Pattern, List
 from importlib import import_module
 from importlib.util import module_from_spec, spec_from_file_location
 
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup, PageElement, Tag
 from mkdocs.structure.nav import Navigation
+from weasyprint import Page
 
 from .cover import make_cover
 from .options import Options
@@ -31,10 +32,10 @@ class Generator(object):
 
         self._theme = self._load_theme_handler()
         self._nav: Navigation | None = None
-        self._head = None
+        self._head: Tag | None = None
 
         self._scraped_scripts: List[PageElement] = []
-        self._mixed_script = ''
+        self._mixed_script: str = ""
 
         def to_pattern(s: str) -> Pattern:
             if s.startswith('^'):
@@ -54,7 +55,7 @@ class Generator(object):
         if nav:
             self._options.logger.debug(f'theme: {self._theme}')
 
-    def on_post_page(self, output_content: str, page, pdf_path: str) -> str:
+    def on_post_page(self, output_content: str, page: Page, pdf_path: str) -> str:
         """ on_post_page """
         def is_excluded(url: str) -> bool:
             for p in self._exclude_page_patterns:
@@ -65,8 +66,8 @@ class Generator(object):
         if is_excluded(page.url):
             self.logger.info(f'Page skipped: [{page.title}]({page.url})')
             return output_content
-        else:
-            self.logger.debug(f' (post: [{page.title}]({page.url})')
+
+        self.logger.debug(f' (post: [{page.title}]({page.url})')
 
         soup = self._soup_from_content(output_content, page)
 
@@ -203,7 +204,7 @@ class Generator(object):
             path = re.sub(r'\.html$', '/', path)
         return path
 
-    def _soup_from_content(self, content: str, page):
+    def _soup_from_content(self, content: str, page) -> PageElement:
         soup = BeautifulSoup(content, 'html.parser')
 
         try:
@@ -372,16 +373,9 @@ class Generator(object):
 
     # -------------------------------------------------------------
     def _to_pdf(self, soup: BeautifulSoup, pdf_path: str):
-        if not self._options.js_renderer:
-            raise RuntimeError('No such `Headless Chrome` program.')
         self._options.js_renderer.to_pdf(soup.prettify(), pdf_path)
 
     def _render_js(self, soup: BeautifulSoup) -> str:
-        if not self._options.js_renderer:
-            self.logger.info('Rendering JavaScript using `BeautifulSoup`.')
-            fix_twemoji(soup, self._options.logger)
-            return str(soup)
-
         self.logger.info('Rendering JavaScript using `Headless Chrome`.')
         soup = self._options.hook.pre_js_render(soup)
 
