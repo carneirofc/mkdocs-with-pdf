@@ -1,7 +1,7 @@
 import unittest
 
 import os
-from weasyprint import urls
+from mkdocs_with_pdf.utils.urls import urls
 from mkdocs_with_pdf.preprocessor.links.transform import transform_href
 
 

@@ -46,9 +46,7 @@ class _CaptureWarnings:
         self._logger.removeFilter(self._filter)
 
 
-class WithPdfPlugin(BasePlugin):
-    config_scheme = Options.config_scheme
-
+class WithPdfPlugin(BasePlugin[Options]):
     def __init__(self):
         self._logger = logging.getLogger("mkdocs.with-pdf")
         self._logger.setLevel(logging.INFO)
@@ -66,22 +64,28 @@ class WithPdfPlugin(BasePlugin):
 
         return server
 
+    def _is_enabled(self) -> bool:
+        self._logger.info("Checking if PDF generation is enabled ...")
+        if self.config.enabled_if_env:
+            self._logger.info(
+                f"Configuration enabled_if_env: {self.config.enabled_if_env}"
+            )
+            env_var_value = os.environ.get(self.config.enabled_if_env)
+            if env_var_value == "1":
+                self._logger.info("PDF generation is enabled")
+                return True
+            self._logger.warning(
+                f"PDF generation is disabled (set environment variable {self.config.enabled_if_env} to 1 to enable)"
+            )
+            return False
+
+        return True
+
     def on_config(self, config):
-        if "enabled_if_env" in self.config:
-            env_name = self.config["enabled_if_env"]
-            if env_name:
-                self.enabled = os.environ.get(env_name) == "1"
-                if not self.enabled:
-                    self._logger.warning(
-                        "without generate PDF"
-                        f"(set environment variable {env_name} to 1 to enable)"
-                    )
-                    return
-            else:
-                self.enabled = True
-        else:
-            self.enabled = True
-        self._options = Options(self.config, config, self._logger)
+        self._logger.info("Initializing mkdocs-with-pdf")
+        self.config.use_mkdocs_configs(config, self._logger)
+        self.enabled = self._is_enabled()
+        self._options = self.config
 
         LOGGER = logging.getLogger(__name__)
         LOGGER.setLevel(logging.INFO)

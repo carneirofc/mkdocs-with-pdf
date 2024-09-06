@@ -42,3 +42,10 @@ include = ["*"]
 
 [project.entry-points."mkdocs.plugins"]
 with-pdf = "mkdocs_with_pdf.plugin:WithPdfPlugin"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+
+[tool.flake8]
+max-line-length = 120

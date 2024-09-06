@@ -8,7 +8,7 @@
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "program": "C:\\Users\\claud\\Energisa\\mkdocs-with-pdf\\tests\\test_mkdocs.py",
             "console": "integratedTerminal",
             "args": ["build"],
             "cwd": "C:\\Users\\claud\\Energisa\\energisa-delivery-center"

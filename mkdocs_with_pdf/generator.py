@@ -6,8 +6,7 @@ from importlib import import_module
 from importlib.util import module_from_spec, spec_from_file_location
 
 from bs4 import BeautifulSoup, PageElement, Tag
-from mkdocs.structure.nav import Navigation
-from weasyprint import Page
+from mkdocs.structure.nav import Navigation, Page
 
 from .cover import make_cover
 from .options import Options
@@ -15,7 +14,6 @@ from .preprocessor import get_combined as prep_combined
 from .styles import style_for_print
 from .themes import generic as generic_theme
 from .toc import make_indexes
-from .utils.emoji_util import fix_twemoji
 from .utils.iframe_util import convert_iframe
 from .utils.image_util import fix_image_alignment, html_inline_images
 from .utils.layout_util import convert_for_two_columns
