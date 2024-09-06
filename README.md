@@ -1,9 +1,14 @@
 # PDF Generate Plugin for MkDocs
 
-[![PyPI version](https://img.shields.io/pypi/v/mkdocs-with-pdf.svg)](https://pypi.org/project/mkdocs-with-pdf)
-[![PyPI downloads](https://img.shields.io/pypi/dm/mkdocs-with-pdf.svg)](https://pypi.org/project/mkdocs-with-pdf)
+[![CD - Deploy do PyPi](https://github.com/carneirofc/mkdocs-with-pdf-browser/actions/workflows/python-publish.yml/badge.svg)](https://github.com/carneirofc/mkdocs-with-pdf-browser/actions/workflows/python-publish.yml)
+
+[![PyPI version](https://img.shields.io/pypi/v/mkdocs-with-pdf-browser.svg)](https://pypi.org/project/mkdocs-with-pdf-browser)
+
+[![PyPI downloads](https://img.shields.io/pypi/dm/mkdocs-with-pdf-browser.svg)](https://pypi.org/project/mkdocs-with-pdf-browser)
 
 ---
+
+This is a fork of the [mkdocs-with-pdf](https://github.com/orzih/mkdocs-with-pdf) plugin where I remove the https://weasyprint.org/ dependecy and fix some minor issues.
 
 This plugin will generate a single PDF file from your MkDocs repository.
 This plugin is inspired by [MkDocs PDF Export Plugin][mkdocs-pdf-export-plugin].
@@ -415,18 +420,6 @@ If you want to contribute to the code of this project, please read the [Contribu
 
 ## Special thanks to
 
-* [Terry Zhao][zhaoterryy] the author of the [MkDocs PDF Export Plugin][mkdocs-pdf-export-plugin] the source of our inspiration. We've used some of his code in this project.
-
 [mkdocs-pdf-export-plugin]: https://github.com/zhaoterryy/mkdocs-pdf-export-plugin
+[mkdocs-wish-pdf]: https://github.com/orzih/mkdocs-with-pdf
 [zhaoterryy]:  https://github.com/zhaoterryy
-
-[weasyprint]: http://weasyprint.org/
-[weasyprint-linux]: https://weasyprint.readthedocs.io/en/latest/install.html#linux
-[weasyprint-macos]: https://weasyprint.readthedocs.io/en/latest/install.html#os-x
-[weasyprint-windows]: https://weasyprint.readthedocs.io/en/latest/install.html#windows
-
-[mkdocs-plugins]: http://www.mkdocs.org/user-guide/plugins/
-[mkdocs-material]: https://github.com/squidfunk/mkdocs-material
-
-[contributing]: https://github.com/orzih/mkdocs-with-pdf/blob/master/CONTRIBUTING.md
-[github-issues]: https://github.com/orzih/mkdocs-with-pdf/issues
