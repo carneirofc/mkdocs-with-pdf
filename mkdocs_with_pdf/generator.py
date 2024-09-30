@@ -24,7 +24,6 @@ from .utils import urls
 
 
 class Generator(object):
-
     def __init__(self, options: Options):
         self._options = options
 
@@ -36,25 +35,39 @@ class Generator(object):
         self._mixed_script: str = ""
 
         def to_pattern(s: str) -> Pattern:
-            if s.startswith('^'):
+            if s.startswith("^"):
                 return re.compile(s)
-            return re.compile(f'^{s}')
+            return re.compile(f"^{s}")
 
-        self._exclude_page_patterns = list(map(
-            to_pattern,
-            self._options.exclude_pages
-        ))
-        self._options.logger.debug(
-            f'Exclude page patterns: {self._exclude_page_patterns}')
+        self._exclude_page_patterns = list(map(to_pattern, self._options.exclude_pages))
+        self.logger.debug(f"Exclude page patterns: {self._exclude_page_patterns}")
+        self._setup_output_path(self._options.output_path)
+
+    @property
+    def logger(self) -> logging.Logger:
+        if self._options and self._options.logger:
+            return self._options.logger
+        return logging.getLogger(__name__)
+
+    def _setup_output_path(self, output_path: str):
+        if not output_path:
+            self.logger.error("Output path is not set.")
+            return
+
+        abspath = os.path.abspath(output_path)
+        self.logger.debug(f"Creating output path: {abspath}")
+        if not os.path.exists(abspath):
+            os.mkdir(abspath)
 
     def on_nav(self, nav: Navigation):
-        """ on_nav """
+        """on_nav"""
         self._nav = nav
         if nav:
-            self._options.logger.debug(f'theme: {self._theme}')
+            self.logger.debug(f"theme: {self._theme}")
 
     def on_post_page(self, output_content: str, page: Page, pdf_path: str) -> str:
-        """ on_post_page """
+        """on_post_page"""
+
         def is_excluded(url: str) -> bool:
             for p in self._exclude_page_patterns:
                 if p.match(url):
@@ -62,58 +75,63 @@ class Generator(object):
             return False
 
         if is_excluded(page.url):
-            self.logger.info(f'Page skipped: [{page.title}]({page.url})')
+            self.logger.info(f"Page skipped: [{page.title}]({page.url})")
             return output_content
 
-        self.logger.debug(f' (post: [{page.title}]({page.url})')
+        self.logger.debug(f" (post: [{page.title}]({page.url})")
 
         soup = self._soup_from_content(output_content, page)
 
         self._remove_empty_tags(soup)
 
         if not self._head:
-            self._head = soup.find('head')
+            self._head = soup.find("head")
             # self.logger.debug(f'{self._head}')
 
         # for 'material'
-        article = soup.find('article')
+        article = soup.find("article")
         if article:
             article = clone_element(article)
 
         # for 'mkdocs' theme
         if not article:
-            main = soup.find('div', attrs={'role': 'main'})
+            main = soup.find("div", attrs={"role": "main"})
             if main:
-                article = soup.new_tag('article')
+                article = soup.new_tag("article")
                 for child in main.contents:
                     article.append(clone_element(child))
 
         if article:
             # remove 'headerlink' if exists.
-            for a in article.select('a.headerlink'):
+            for a in article.select("a.headerlink"):
                 a.decompose()
-            for a in article.select('a.md-content__button'):
+            for a in article.select("a.md-content__button"):
                 a.decompose()
             self._fix_missing_id_for_h1(article, page)
-            setattr(page, 'pdf-article', article)
+            setattr(page, "pdf-article", article)
             self._scrap_scripts(soup)
         else:
-            self.logger.warning(f'Missing article: [{page.title}]({page.url})')
+            self.logger.warning(f"Missing article: [{page.title}]({page.url})")
+
+        if not self._options.hook:
+            raise RuntimeError("No hook is set.")
 
         return self._options.hook.inject_link(
-            output_content, pdf_path, page, self._theme)
+            output_content, pdf_path, page, self._theme
+        )
 
     def on_post_build(self, config, output_path):
         if self._head:
-            soup = BeautifulSoup('<html><body></body></html>', 'html.parser')
+            soup = BeautifulSoup("<html><body></body></html>", "html.parser")
             soup.html.insert(0, self._head)
         else:
             soup = BeautifulSoup(
-                '<html><head></head><body></body></html>', 'html.parser')
+                "<html><head></head><body></body></html>", "html.parser"
+            )
 
         def add_stylesheet(stylesheet: str):
             if stylesheet:
-                style_tag = soup.new_tag('style')
+                style_tag = soup.new_tag("style")
                 style_tag.string = stylesheet
                 soup.head.append(style_tag)
             pass
@@ -122,7 +140,7 @@ class Generator(object):
         add_stylesheet(self._theme.get_stylesheet(self._options.debug_html))
 
         if self._nav is None:
-            raise RuntimeError('Navigation is not set.')
+            raise RuntimeError("Navigation is not set.")
 
         for page in self._nav:
             content = self._get_content(soup, page)
@@ -134,49 +152,46 @@ class Generator(object):
 
         wrap_tabbed_set_content(soup, self._options.logger)
         fix_image_alignment(soup, self._options.logger)
-        convert_iframe(soup,
-                       self._options.convert_iframe,
-                       self._options.logger)
-        convert_for_two_columns(soup,
-                                self._options.two_columns_level,
-                                self._options.logger)
+        convert_iframe(soup, self._options.convert_iframe, self._options.logger)
+        convert_for_two_columns(
+            soup, self._options.two_columns_level, self._options.logger
+        )
         self._normalize_link_anchors(soup)
         html_string = self._render_js(soup)
         if not html_string:
-            raise RuntimeError('Failed to render HTML.')
+            raise RuntimeError("Failed to render HTML.")
 
         soup = self._options.hook.pre_pdf_render(html_string)
         html_inline_images(soup, self._options.logger)
-        with open(os.path.join(output_path, 'document.html'), 'w') as f:
+        with open(os.path.join(output_path, "document.html"), "w") as f:
             f.write(soup.prettify())
 
         if self._options.debug_html and self._options.debug_html_path:
             output_abs_path = os.path.abspath(self._options.debug_html_path)
             self.logger.info(f'Output a debug HTML to "{output_abs_path}".')
-            with open(output_abs_path, 'wb') as f:
-                f.write(soup.prettify().encode('utf-8'))
+            with open(output_abs_path, "wb") as f:
+                f.write(soup.prettify().encode("utf-8"))
 
         if self._options.debug_html and not self._options.debug_html_path:
             print(soup.prettify())
 
         self.logger.info("Rendering for PDF.")
-        abs_pdf_path = os.path.abspath(os.path.join(config['site_dir'], output_path))
+        abs_pdf_path = os.path.abspath(os.path.join(config["site_dir"], output_path))
         os.makedirs(os.path.dirname(abs_pdf_path), exist_ok=True)
 
-        self._to_pdf(soup, os.path.abspath(os.path.join(output_path, 'document.pdf')))
+        self._to_pdf(soup, os.path.abspath(os.path.join(output_path, "document.pdf")))
 
     # ------------------------
     def _remove_empty_tags(self, soup: PageElement):
-
         def is_blank(el):
             if len(el.get_text(strip=True)) != 0:
                 return False
-            elif el.find(['img', 'svg']):
+            elif el.find(["img", "svg"]):
                 return False
             else:
                 return True
 
-        includes = ['article', 'p']
+        includes = ["article", "p"]
         while True:
             hit = False
             for x in soup.find_all():
@@ -188,22 +203,22 @@ class Generator(object):
                 break
 
     def _page_path_for_id(self, page):
-        """ normalize to directory urls style"""
+        """normalize to directory urls style"""
 
         if page.is_section:
             path = get_section_path(page)
         else:
             path = page.url
 
-        path = '.' if not path or path == 'index.html' else path
-        if path.endswith('index.html'):
-            path = re.sub(r'index\.html$', '', path)
-        elif path.endswith('.html'):
-            path = re.sub(r'\.html$', '/', path)
+        path = "." if not path or path == "index.html" else path
+        if path.endswith("index.html"):
+            path = re.sub(r"index\.html$", "", path)
+        elif path.endswith(".html"):
+            path = re.sub(r"\.html$", "/", path)
         return path
 
     def _soup_from_content(self, content: str, page) -> PageElement:
-        soup = BeautifulSoup(content, 'html.parser')
+        soup = BeautifulSoup(content, "html.parser")
 
         try:
             abs_dest_path = page.file.abs_dest_path
@@ -223,34 +238,32 @@ class Generator(object):
         def shift_heading(elem, page):
             for i in range(7, 0, -1):
                 while True:
-                    h = elem.find(f'h{i}')
+                    h = elem.find(f"h{i}")
                     if not h:
                         break
-                    h.name = f'h{i + 1}'
+                    h.name = f"h{i + 1}"
 
             page_path = self._page_path_for_id(page)
-            h1 = soup.new_tag('h1', id=f'{page_path}')
+            h1 = soup.new_tag("h1", id=f"{page_path}")
             h1.append(str(page.title))
             elem.insert(0, h1)
             return elem
 
         def cleanup_class(classes):
             if classes and len(classes):
-                excludes = ['md-content__inner']
+                excludes = ["md-content__inner"]
                 return [c for c in classes if not (c in excludes)]
             return classes
 
-        article = getattr(page, 'pdf-article', None)
+        article = getattr(page, "pdf-article", None)
         if article:
-
             page_path = self._page_path_for_id(page)
-            article['id'] = f'{page_path}:'  # anchor for each page.
-            article['data-url'] = f'/{page_path}'
+            article["id"] = f"{page_path}:"  # anchor for each page.
+            article["data-url"] = f"/{page_path}"
             return article
 
         elif page.children:
-
-            new_article = soup.new_tag('article')
+            new_article = soup.new_tag("article")
             found = False
             for c in page.children:
                 content = self._get_content(soup, c)
@@ -262,18 +275,18 @@ class Generator(object):
                 return None
 
             child_classes = None
-            for child_article in new_article.find_all('article'):
-                child_article.name = 'section'
-                classes = child_article.get('class')
+            for child_article in new_article.find_all("article"):
+                child_article.name = "section"
+                classes = child_article.get("class")
                 if classes and not child_classes:
                     child_classes = classes
-                child_article['class'] = cleanup_class(classes)
+                child_article["class"] = cleanup_class(classes)
 
             page_path = self._page_path_for_id(page)
-            new_article['id'] = f'{page_path}:'  # anchor for each page.
-            new_article['data-url'] = f'/{page_path}'
+            new_article["id"] = f"{page_path}:"  # anchor for each page.
+            new_article["data-url"] = f"/{page_path}"
             if child_classes:
-                new_article['class'] = child_classes
+                new_article["class"] = child_classes
 
             if self._options.heading_shift:
                 return shift_heading(new_article, page)
@@ -282,38 +295,35 @@ class Generator(object):
         return None
 
     def _fix_missing_id_for_h1(self, content, page):
-        h1 = content.find('h1')
-        if h1 and not h1.get('id'):
-            h1['id'] = self._page_path_for_id(page)
+        h1 = content.find("h1")
+        if h1 and not h1.get("id"):
+            h1["id"] = self._page_path_for_id(page)
 
     # -------------------------------------------------------------
-
-    @property
-    def logger(self) -> logging.Logger:
-        return self._options.logger
 
     def _load_theme_handler(self):
         theme = self._options.theme_name
         custom_handler_path = self._options.theme_handler_path
-        module_name = '.' + (theme or 'generic').replace('-', '_')
+        module_name = "." + (theme or "generic").replace("-", "_")
         if custom_handler_path:
             try:
                 spec = spec_from_file_location(
-                    module_name, os.path.join(
-                        os.getcwd(), custom_handler_path))
+                    module_name, os.path.join(os.getcwd(), custom_handler_path)
+                )
                 mod = module_from_spec(spec)
                 spec.loader.exec_module(mod)
                 return mod
             except FileNotFoundError as e:
                 self.logger.error(
-                    f'Could not load theme handler {theme}'
-                    f' from custom directory "{custom_handler_path}": {e}')
+                    f"Could not load theme handler {theme}"
+                    f' from custom directory "{custom_handler_path}": {e}'
+                )
                 pass
 
         try:
-            return import_module(module_name, 'mkdocs_with_pdf.themes')
+            return import_module(module_name, "mkdocs_with_pdf.themes")
         except ImportError as e:
-            self.logger.error(f'Could not load theme handler {theme}: {e}')
+            self.logger.error(f"Could not load theme handler {theme}: {e}")
             return generic_theme
 
     # -------------------------------------------------------------
@@ -324,31 +334,35 @@ class Generator(object):
             # https://discussions.apple.com/thread/251041261
 
             # (probably not duplicated.)
-            anchor = anchor.replace('%25', '-').replace('%', '-')
+            anchor = anchor.replace("%25", "-").replace("%", "-")
             return anchor
 
         for anchor in soup.find_all(id=True):
-            anchor['id'] = normalize_anchor_chars(anchor['id'])
-        for link in soup.find_all('a', href=True):
-            link['href'] = normalize_anchor_chars(link['href'])
+            anchor["id"] = normalize_anchor_chars(anchor["id"])
+        for link in soup.find_all("a", href=True):
+            link["href"] = normalize_anchor_chars(link["href"])
 
-        if not (self._options.debug_html or self._options.show_anchors or
-                self._options.strict or self._options.verbose):
+        if not (
+            self._options.debug_html
+            or self._options.show_anchors
+            or self._options.strict
+            or self._options.verbose
+        ):
             return
 
         from urllib.parse import urlparse
 
-        anchors = set(map(lambda el: '#' + el['id'], soup.find_all(id=True)))
+        anchors = set(map(lambda el: "#" + el["id"], soup.find_all(id=True)))
 
         if not (self._options.strict or self._options.debug_html):
-            self.logger.info('Anchor points provided:')
+            self.logger.info("Anchor points provided:")
             for anchor in sorted(anchors):
-                self.logger.info(f'| {anchor}')
+                self.logger.info(f"| {anchor}")
             return
 
         missing = set()
-        for el in soup.find_all('a', href=True):
-            href = el['href']
+        for el in soup.find_all("a", href=True):
+            href = el["href"]
             target_url = urlparse(href)
 
             if target_url.scheme or target_url.netloc:
@@ -359,36 +373,46 @@ class Generator(object):
             missing.add(href)
 
         if len(missing):
-            self.logger.error(f'Missing {len(missing)} link(s):')
+            self.logger.error(f"Missing {len(missing)} link(s):")
             for link in sorted(missing):
-                self.logger.warning(f'  | {link}')
-            if (self._options.show_anchors or
-                self._options.verbose or
-                    self._options.debug_html):
-                self.logger.info('  | --- found anchors:')
+                self.logger.warning(f"  | {link}")
+            if (
+                self._options.show_anchors
+                or self._options.verbose
+                or self._options.debug_html
+            ):
+                self.logger.info("  | --- found anchors:")
                 for anchor in sorted(anchors):
-                    self.logger.info(f'  | {anchor}')
+                    self.logger.info(f"  | {anchor}")
 
     # -------------------------------------------------------------
     def _to_pdf(self, soup: BeautifulSoup, pdf_path: str):
+        if not self._options.js_renderer:
+            raise RuntimeError("No JavaScript renderer is set.")
+
         self._options.js_renderer.to_pdf(soup.prettify(), pdf_path)
 
     def _render_js(self, soup: BeautifulSoup) -> str:
-        self.logger.info('Rendering JavaScript using `Headless Chrome`.')
+        self.logger.info("Rendering JavaScript using A`Headless Chrome`.")
+        if not self._options.hook:
+            raise RuntimeError("No hook is set.")
+        if not self._options.js_renderer:
+            raise RuntimeError("No JavaScript renderer is set.")
+
         soup = self._options.hook.pre_js_render(soup)
 
         scripts = self._theme.get_script_sources()
         if len(scripts) > 0:
-            body = soup.find('body')
+            body = soup.find("body")
             if body:
                 for script in self._scraped_scripts:
                     body.append(script)
                 if len(self._mixed_script) > 0:
-                    tag = soup.new_tag('script')
+                    tag = soup.new_tag("script")
                     tag.string = self._mixed_script
                     body.append(tag)
                 for src in scripts:
-                    body.append(soup.new_tag('script', src=f'file://{src}'))
+                    body.append(soup.new_tag("script", src=f"file://{src}"))
 
         return self._options.js_renderer.render(soup.prettify())
 
@@ -399,25 +423,23 @@ class Generator(object):
         # CAUTION:
         # It does not consider cases where the tag contains both src and text.
 
-        scripts = soup.select('body>script')
+        scripts = soup.select("body>script")
         if not scripts:
             return
 
         def exists_src(src):
             for script in self._scraped_scripts:
-                if src == script['src']:
+                if src == script["src"]:
                     return True
             return False
 
         for script in scripts:
-            if script.has_attr('src'):
-                src = script['src']
-                if (not src
-                    or not re.match(r'^http?s://', src)
-                        or exists_src(src)):
+            if script.has_attr("src"):
+                src = script["src"]
+                if not src or not re.match(r"^http?s://", src) or exists_src(src):
                     continue
                 self._scraped_scripts.append(script)
             else:
                 text = script.get_text()
                 if text:
-                    self._mixed_script += ';' + text
+                    self._mixed_script += ";" + text

@@ -60,6 +60,7 @@ class Template(object):
 
             env.filters['to_url'] = URLFilter(self._options, self._config)
             env.filters['to_inline_b64'] = InlineB64Filter(self._options, self._config)
+            env.filters['single_quote'] = lambda x: f"'{x}'"
 
             if Barcode:
                 env.filters['barcode'] = Barcode(self._options, self._config)

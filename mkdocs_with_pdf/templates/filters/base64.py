@@ -1,6 +1,6 @@
 import os
-import base64
 from . import _FilterBase
+from ...utils.image_util import convert_image_to_base64
 
 
 class InlineB64Filter(_FilterBase):
@@ -18,10 +18,9 @@ class InlineB64Filter(_FilterBase):
         for d in dirs:
             if not d:
                 continue
-            path = os.path.abspath(os.path.join(d, pathname))
 
-            if os.path.isfile(path):
-                with open(path, "rb") as f:
-                    return base64.b64encode(f.read()).decode("utf-8")
+            data = convert_image_to_base64(pathname)
+            if data:
+                return data
 
         raise FileNotFoundError(f"Image file not found: {pathname}")

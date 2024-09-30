@@ -44,3 +44,6 @@ def _make_back_cover(soup: PageElement, options: Options):
         soup.body.append(soup_template)
     except Exception as e:
         options.logger.error('Failed to generate the back cover page: %s', e)
+
+        if "No filter named 'qrcode' found" in e.__str__():
+            options.logger.warning("Please install qrcode module to generate QR code.")

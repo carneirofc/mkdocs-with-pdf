@@ -66,6 +66,13 @@ class WithPdfPlugin(BasePlugin[Options]):
 
     def _is_enabled(self) -> bool:
         self._logger.info("Checking if PDF generation is enabled ...")
+
+        if not self.config.enabled_if_env:
+            self._logger.info(
+                "PDF generation is enabled. If conditional generation is required, set the enabled_if_env option."
+            )
+            return True
+
         if self.config.enabled_if_env:
             self._logger.info(
                 f"Configuration enabled_if_env: {self.config.enabled_if_env}"

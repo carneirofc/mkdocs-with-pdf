@@ -16,7 +16,11 @@ def convert_image_to_base64(uri: str, logger: Logger | None = None) -> str | Non
     file_path = ""
 
     if sys.platform == "win32":
-        file_path = uri.replace("file:///", "")
+        # Emulate the behavior of urllib.parse.urlparse() for Windows paths
+        if uri.startswith("file:///"):
+            file_path = uri.replace("file:///", "")
+        else:
+            file_path = uri.replace("file://", "")
     else:
         file_path = uri.replace("file://", "")
 
@@ -44,11 +48,12 @@ def convert_image_to_base64(uri: str, logger: Logger | None = None) -> str | Non
 def html_inline_images(soup, logger: Logger = None):
     """Converts all image tags with a 'src' attribute starting with 'file://' to inline base64 images."""
     if logger:
-        logger.info("Converting inline images.")
+        logger.info("Inlining images.")
 
     for img in soup.find_all("img"):
         if not img.has_attr("src"):
             continue
+
         if not isinstance(img, Tag):
             logger.warning(f"Invalid element, {img} is not a Tag.")
             continue
@@ -65,7 +70,7 @@ def html_inline_images(soup, logger: Logger = None):
         encoded_src = convert_image_to_base64(uri, logger)
         if encoded_src:
             img["src"] = encoded_src
-            logger.info(f"  | {img['src']} -> (base64)")
+            logger.info(f"  | {uri} -> (base64)")
 
 
 def fix_image_alignment(soup: PageElement, logger: Logger = None):
